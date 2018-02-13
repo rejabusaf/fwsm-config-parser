@@ -39,7 +39,7 @@ lookupLevel = 0
 lookupObjId = 0
 objectCount = 0
 outputlist = []
-tmplookupObjId = 0
+nameObjCount = 0
 fwVersion = 'low'
 runOnceSearchFill = 1
 
@@ -77,7 +77,7 @@ if fwVersion == 'low':
             string = string.split()
             objectRef.append(ObjectData(1, string[2]))
             objectRef[lookupObjId - 1].addto(string[1])
-        tmplookupObjId = lookupObjId
+        nameObjCount = lookupObjId
 
 
 ### ADD member 'group-objects' OBJECTS to SEARCHLIST
@@ -98,8 +98,8 @@ for line in lines:
     if match:
         string = match.group() + '\n'
         string = string.split()
-        if string[1] not in searchObjList:
-            searchObjList.append(string[1])
+        if string[2] not in searchObjList:
+            searchObjList.append(string[2])
 
 
 #             LOOKUP THE LIST TWICE TO APPEND TO MEMBERS:
@@ -107,7 +107,7 @@ for line in lines:
 #               - MEMBERS FROM GROUP OBJECTS
 
 for lookupLevel in range(0,2):
-    lookupObjId = tmplookupObjId
+    lookupObjId = nameObjCount
     for line in lines:
         pattern = '^(object\-group\snetwork\s)(.*)$'
         match = re.search(pattern, line)
