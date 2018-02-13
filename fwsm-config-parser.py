@@ -82,32 +82,34 @@ if fwVersion == 'low':
                 pattern0 = str('^(\040)(network\-object\s)' + string[1] + '\s(?:[0-9]{1,3}\.){3}[0-9]{1,3}$')
                 match0 = re.search(pattern0, line0)
                 if match0:
-                    found = True
                     string0 = match0.group() + '\n'
                     string0 = string0.split()
                     if str(string0[1]) == str(string[1]):
                         ipa = str(string0[1] + '/' + string0[2])
                         objectRef[lookupObjId - 1].addto(ipa)
+                        found = True
                         break
             if found is False:
                 for line0 in lines:
                     pattern1 = str('^access\-list(.*)(' + string[1] + ')\s(?:[0-9]{1,3}\.){3}[0-9]{1,3}\\b')
                     match1 = re.search(pattern1, line0)
                     if match1:
-                        found = True
                         string1 = match1.group() + '\n'
                         string1 = string1.split()
                         if string1[-3] == 'host':
                             ipa = str(string[1] + '/255.255.255.255')
                             objectRef[lookupObjId - 1].addto(ipa)
+                            found = True
                             break
                         else:
                             ipa = str(string[1] + '/' + string1[-1])
                             objectRef[lookupObjId - 1].addto(ipa)
+                            found = True
                             break
             if found is False:
                 ipa = str(string[1] + '/255.255.255.255')
                 objectRef[lookupObjId - 1].addto(ipa)
+                found = True
         nameObjCount = lookupObjId
 
 
