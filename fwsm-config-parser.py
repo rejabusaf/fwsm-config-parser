@@ -14,10 +14,12 @@ class ObjectData:
         if self.objType == 2:
             self.objTypename = 'object-group network'
         if self.objType == 3:
+            self.objTypename = 'object network'
+        if self.objType == 4:
             self.objTypename = 'object-group service'
         self.contents = []
 
-    def append(self,input):
+    def addto(self,input):
         self.contents.append(input)
 
     def __repr__(self):
@@ -27,8 +29,8 @@ class ObjectData:
         return "{}".format('"'.join(self.contents))
 
 
-fileName = '/tmp/test.config'
-csvfile = '/tmp/test.csv'
+fileName = 'C:\\Users\\t721\\Desktop\\workbook\\test.txt'
+csvfile = 'C:\\Users\\t721\\Desktop\\workbook\\test.csv'
 fileContents = []
 objectRef = []
 searchObjRef = []
@@ -39,6 +41,7 @@ objectCount = 0
 outputlist = []
 tmplookupObjId = 0
 fwVersion = 'low'
+runOnceSearchFill = 1
 
 
 ### OPEN FILE TO READ LINES TO LIST
@@ -49,7 +52,7 @@ with open(fileName, 'r') as f:
 
 ### FIND VERSION FROM CONFIG FILE
 for line in lines:
-    pattern = '(.*)Version(\s)(.*)[.].*(\<context>)'
+    pattern = '(.*)Version(\s)(.*)[.].*'
     match = re.search(pattern, line)
     if match:
         string = match.group() + '\n'
@@ -61,7 +64,6 @@ for line in lines:
         else:
             fwVersion = 'low'
             print('Running for old config Version')
-    break
 
 
 ### ADD member 'name' OBJECTS to SEARCHLIST
@@ -74,8 +76,8 @@ if fwVersion == 'low':
             string = match.group() + '\n'
             string = string.split()
             objectRef.append(ObjectData(1, string[2]))
-            objectRef[lookupObjId - 1].append(string[1])
-    tmplookupObjId = lookupObjId
+            objectRef[lookupObjId - 1].addto(string[1])
+        tmplookupObjId = lookupObjId
 
 
 ### ADD member 'group-objects' OBJECTS to SEARCHLIST
@@ -85,8 +87,7 @@ for line in lines:
     if match:
         string = match.group() + '\n'
         string = string.split()
-        while string[1] not in searchObjList:
-            searchObjRef.append(ObjectData(0, string[1]))
+        if string[1] not in searchObjList:
             searchObjList.append(string[1])
 
 
@@ -97,9 +98,8 @@ for line in lines:
     if match:
         string = match.group() + '\n'
         string = string.split()
-        while string[2] not in searchObjList:
-            searchObjRef.append(ObjectData(0, string[2]))
-            searchObjList.append(string[2])
+        if string[1] not in searchObjList:
+            searchObjList.append(string[1])
 
 
 #             LOOKUP THE LIST TWICE TO APPEND TO MEMBERS:
@@ -117,12 +117,6 @@ for lookupLevel in range(0,2):
             string = string.split()
             if lookupLevel == 0:
                 objectRef.append(ObjectData(2, string[2]))
-                for i in range(0, len(searchObjRef)):
-                    if searchObjRef[i].objName == string[2]:
-                        objectRef[lookupObjId-1].objType += 10
-                        searchObjRef[i] = objectRef[lookupObjId-1]
-                        break
-
 
         pattern = '^(object\snetwork\s)(.*)$'
         match = re.search(pattern, line)
@@ -132,12 +126,6 @@ for lookupLevel in range(0,2):
             string = string.split()
             if lookupLevel == 0:
                 objectRef.append(ObjectData(3, string[2]))
-                for i in range(0, len(searchObjRef)):
-                    if searchObjRef[i].objName == string[2]:
-                        objectRef[lookupObjId-1].objType += 10
-                        searchObjRef[i] = objectRef[lookupObjId-1]
-                        print(searchObjRef[i])
-                        break
 
         pattern = '^(object\-group\sservice\s)(.*)$'
         match = re.search(pattern, line)
@@ -146,15 +134,9 @@ for lookupLevel in range(0,2):
             string = match.group() + '\n'
             string = string.split()
             if lookupLevel == 0:
-                objectRef.append(ObjectData(3, string[2]))
+                objectRef.append(ObjectData(4, string[2]))
                 if len(string) > 4:
                     objectRef.serviceType = string[4]
-                for i in range(0, len(searchObjRef)):
-                    if searchObjRef[i].objName == string[2]:
-                        objectRef[lookupObjId-1].objType += 10
-                        searchObjRef[i] = objectRef[lookupObjId-1]
-                        break
-
 
         if lookupLevel == 0:
             pattern = '^(\040)(network\-object\s)(.*)$'
@@ -164,11 +146,11 @@ for lookupLevel in range(0,2):
                 string = string.split()
                 if string[1] == 'host':
                     ipa = str(string[2]+ '/' + '255.255.255.255')
-                    objectRef[lookupObjId - 1].append(ipa)
+                    objectRef[lookupObjId - 1].addto(ipa)
                 else:
                     if string[1] != 'object':
                         ipa = str(string[1]+ '/' + string[2])
-                        objectRef[lookupObjId - 1].append(ipa)
+                        objectRef[lookupObjId - 1].addto(ipa)
 
             pattern = '^(\040)(subnet\s)(.*)$'
             match = re.search(pattern, line)
@@ -176,7 +158,7 @@ for lookupLevel in range(0,2):
                 string = match.group() + '\n'
                 string = string.split()
                 ipa = str(string[1]+ '/' + string[2])
-                objectRef[lookupObjId - 1].append(ipa)
+                objectRef[lookupObjId - 1].addto(ipa)
 
             pattern = '^(\040)(host\s)(.*)$'
             match = re.search(pattern, line)
@@ -184,7 +166,7 @@ for lookupLevel in range(0,2):
                 string = match.group() + '\n'
                 string = string.split()
                 ipa = str(string[1] + '/' + '255.255.255.255')
-                objectRef[lookupObjId - 1].append(ipa)
+                objectRef[lookupObjId - 1].addto(ipa)
 
             pattern = '^(\040)(port\-object\s)(.*)$'
             match = re.search(pattern, line)
@@ -192,7 +174,7 @@ for lookupLevel in range(0,2):
                 string = match.group() + '\n'
                 string = string.split()
                 po = '-'.join(string)
-                objectRef[lookupObjId - 1].append(po)
+                objectRef[lookupObjId - 1].addto(po)
 
             pattern = '^(\040)(service\-object\s)(.*)$'
             match = re.search(pattern, line)
@@ -200,10 +182,17 @@ for lookupLevel in range(0,2):
                 string = match.group() + '\n'
                 string = string.split()
                 po = '-'.join(string)
-                objectRef[lookupObjId - 1].append(po)
-
+                objectRef[lookupObjId - 1].addto(po)
 
         if lookupLevel > 0:
+            if runOnceSearchFill > 0:
+                for i in range(0, len(objectRef)):
+                    for j in range(0, len(searchObjList)):
+                        if searchObjList[j] == objectRef[i].objName:
+                            searchObjRef.append(ObjectData(objectRef[i].objType, objectRef[i].objName))
+                            searchObjRef[-1].contents = objectRef[i].contents
+                runOnceSearchFill = 0
+
             pattern = '^(\040)(group\-object\s)(.*)$'
             match = re.search(pattern, line)
             if match:
@@ -212,7 +201,6 @@ for lookupLevel in range(0,2):
                 for i in range(0, len(searchObjRef)):
                     if searchObjRef[i].objName == string[1]:
                         objectRef[lookupObjId - 1].contents += searchObjRef[i].contents
-                        searchObjRef[i] = objectRef[lookupObjId - 1]
                         break
 
             pattern = '^(\040)(network\-object\sobject)(.*)$'
@@ -222,10 +210,7 @@ for lookupLevel in range(0,2):
                 string = string.split()
                 for i in range(0, len(searchObjRef)):
                     if searchObjRef[i].objName == string[2]:
-                        print('objectRef',objectRef[lookupObjId - 1].contents)
-                        print('searchRef',searchObjRef[i].contents)
                         objectRef[lookupObjId - 1].contents += searchObjRef[i].contents
-                        searchObjRef[i] = objectRef[lookupObjId - 1]
                         break
 
 
@@ -233,6 +218,8 @@ for lookupLevel in range(0,2):
 with open(csvfile, "w") as output:
     writer = csv.writer(output, lineterminator='\n')
     for i in range(0, len(objectRef)):
+        listset = set(objectRef[i].contents)
+        objectRef[i].contents = list(listset)
         objectRef[i].contents.sort()
         outputlist.append((objectRef[i].objName,objectRef[i]))
     writer.writerows(outputlist)
